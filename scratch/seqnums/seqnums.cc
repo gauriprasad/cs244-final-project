@@ -30,130 +30,212 @@
 
 using namespace ns3;
 
-NS_LOG_COMPONENT_DEFINE ("BandwidthEstimation");
+NS_LOG_COMPONENT_DEFINE ("SeqNum");
 
 static double TRACE_START_TIME = 0.05;
 
 static void
-EstimatedBWTracer (Ptr<OutputStreamWrapper> stream,
-                   double oldval, double newval)
+SeqnumFastTracer (Ptr<OutputStreamWrapper> stream,
+                  SequenceNumber32 oldval, SequenceNumber32 newval)
 {
   NS_LOG_INFO (Simulator::Now ().GetSeconds () <<
-                                               " Estimated bandwidth from " << oldval << " to " << newval);
+                                               " Sequence numbers from " << oldval << " to " << newval);
 
   *stream->GetStream () << Simulator::Now ().GetSeconds () << " "
                         << newval << std::endl;
 }
 
 static void
-TraceEstimatedBW (Ptr<OutputStreamWrapper> estimatedBWStream)
+TraceSeqnumFast (Ptr<OutputStreamWrapper> seqnumFastStream)
 {
-  Config::ConnectWithoutContext ("/NodeList/0/$ns3::TcpL4Protocol/SocketList/0/CongestionOps/$ns3::TcpWestwood/EstimatedBW",
-                                 MakeBoundCallback (&EstimatedBWTracer, estimatedBWStream));
+  Config::ConnectWithoutContext ("/NodeList/0/$ns3::TcpL4Protocol/SocketList/0/HighestSequence",
+                                 MakeBoundCallback (&SeqnumFastTracer, seqnumFastStream));
+}
+
+static void
+SeqnumSlowTracer (Ptr<OutputStreamWrapper> stream,
+                  SequenceNumber32 oldval, SequenceNumber32 newval)
+{
+  NS_LOG_INFO (Simulator::Now ().GetSeconds () <<
+                                               " Sequence numbers from " << oldval << " to " << newval);
+
+  *stream->GetStream () << Simulator::Now ().GetSeconds () << " "
+                        << newval << std::endl;
+}
+
+static void
+TraceSeqnumSlow (Ptr<OutputStreamWrapper> seqnumSlowStream)
+{
+  Config::ConnectWithoutContext ("/NodeList/0/$ns3::TcpL4Protocol/SocketList/1/HighestSequence",
+                                 MakeBoundCallback (&SeqnumSlowTracer, seqnumSlowStream));
 }
 
 int
 main (int argc, char *argv[])
 {
-  NS_LOG_UNCOND ("Figure 3: TCPW with concurrent UDP traffic: bandwidth estimation");
-  int bw = 5; // Mbps
-  int delay = 30; // milliseconds
-  int time = 300; // seconds
+  NS_LOG_UNCOND ("Figure 4: TCPW sequence numbers with 50 ms and 200 ms RTT without RED: ");
+  int time = 200; // seconds
+  std::string transport_prot = "TcpWestwood";
 
-  std::string bwStr = std::to_string(bw) + "Mbps";
-  std::string delayStr = std::to_string(delay) + "ms";
+  CommandLine cmd (__FILE__);
+  cmd.AddValue ("transport_prot", "Transport protocol to use: TcpWestwood, TcpReno", transport_prot);
+  cmd.Parse (argc, argv);
 
-  std::string dir = "outputs/";
-  std::string estimatedBWStreamName = dir + "estimated-bw.tr";
-  Ptr<OutputStreamWrapper> estimatedBWStream;
+  /********** Declare output files **********/
+  
   AsciiTraceHelper asciiTraceHelper;
-  estimatedBWStream = asciiTraceHelper.CreateFileStream (estimatedBWStreamName);
+  std::string dir = "outputs/";
+
+  std::string seqnumFastStreamName = dir + transport_prot + "SeqnumFast.tr";
+  Ptr<OutputStreamWrapper> seqnumFastStream;
+  seqnumFastStream = asciiTraceHelper.CreateFileStream (seqnumFastStreamName);
+  
+  std::string seqnumSlowStreamName = dir + transport_prot + "SeqnumSlow.tr";
+  Ptr<OutputStreamWrapper> seqnumSlowStream;
+  seqnumSlowStream = asciiTraceHelper.CreateFileStream (seqnumSlowStreamName);
+
+  /********** Create Nodes **********/
 
   NS_LOG_UNCOND("Creating Nodes...");
 
   NodeContainer nodes;
-  nodes.Create(2);
+  nodes.Create(3);
 
   Ptr<Node> h1 = nodes.Get(0);
   Ptr<Node> h2 = nodes.Get(1);
+  Ptr<Node> h3 = nodes.Get(2);
+  
+  /********** Create Channels **********/
 
-  NS_LOG_UNCOND("Configuring Channels...");
+  NS_LOG_UNCOND("Configuring Channels..."); 
 
-  PointToPointHelper link;
-  link.SetDeviceAttribute ("DataRate", StringValue (bwStr));
-  link.SetChannelAttribute ("Delay", StringValue (delayStr));
+  PointToPointHelper bottleneckLink;
+  bottleneckLink.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
+  bottleneckLink.SetChannelAttribute ("Delay", StringValue ("25ms"));
+  //bottleneckLink.SetQueue ("ns3::DropTailQueue", "MaxSize", StringValue ("1p"));
+
+  PointToPointHelper longLink;
+  longLink.SetDeviceAttribute ("DataRate", StringValue ("100Mbps"));
+  longLink.SetChannelAttribute ("Delay", StringValue ("75ms"));
+  //bottleneckLink.SetQueue ("ns3::DropTailQueue", "MaxSize", StringValue ("1p"));
+
+  /********** Create NetDevices **********/
 
   NS_LOG_UNCOND("Creating NetDevices...");
 
-  NetDeviceContainer h1h2_NetDevices = link.Install (h1, h2);
+  NetDeviceContainer h1h2_NetDevices = bottleneckLink.Install (h1, h2);
+  NetDeviceContainer h2h3_NetDevices = longLink.Install (h2, h3);
 
-  Config::SetDefault("ns3::TcpL4Protocol::SocketType", TypeIdValue (TcpWestwood::GetTypeId()));
-  Config::SetDefault("ns3::TcpWestwood::ProtocolType", EnumValue(TcpWestwood::WESTWOODPLUS));
-  Config::SetDefault("ns3::TcpWestwood::FilterType", EnumValue(TcpWestwood::TUSTIN));
+  /********** Set TCP defaults **********/
+
+  // TODO set packet size to 400 bytes? 
+
+  /*
+  PppHeader ppph;
+  Ipv4Header ipv4h;
+  TcpHeader tcph;
+  uint32_t tcpSegmentSize = 400 
+                            - ppph.GetSerializedSize ()
+                            - ipv4h.GetSerializedSize ()
+                            - tcph.GetSerializedSize ();
+  Config::SetDefault("ns3::TcpSocket::SegmentSize", UintegerValue(tcpSegmentSize));
+  */
+
+  // Set RED on or off
+
+  // TODO 
+
+  // Choose Westwood or Reno
+
+  if (transport_prot == "TcpWestwood") {
+      Config::SetDefault ("ns3::TcpL4Protocol::SocketType", TypeIdValue (TcpWestwood::GetTypeId()));
+      Config::SetDefault ("ns3::TcpWestwood::ProtocolType", EnumValue(TcpWestwood::WESTWOODPLUS));
+      Config::SetDefault ("ns3::TcpWestwood::FilterType", EnumValue(TcpWestwood::TUSTIN));
+  } else if (transport_prot == "TcpReno") {
+      Config::SetDefault ("ns3::TcpL4Protocol::SocketType", TypeIdValue (TcpNewReno::GetTypeId()));
+  } else {
+      NS_LOG_UNCOND("BAD TCP PROT");
+  }
+  
+  /********** Install Internet Stack **********/
 
   NS_LOG_UNCOND("Installing Internet Stack...");
 
   InternetStackHelper stack;
   stack.InstallAll ();
 
+  // Set IP addresses of nodes in network
   Ipv4AddressHelper address;
   address.SetBase ("10.0.0.0", "255.255.255.0");
   Ipv4InterfaceContainer h1h2_interfaces = address.Assign (h1h2_NetDevices);
   address.NewNetwork ();
+  Ipv4InterfaceContainer h2h3_interfaces = address.Assign (h2h3_NetDevices);
 
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
+  /********** Setting up the Application **********/
+  
   NS_LOG_UNCOND("Setting up the Application...");
 
-  // TCP
+  /*** Fast TCP ***/
+
+  // Receiver application
   uint16_t receiverPort = 5001;
-  AddressValue receiverAddress (InetSocketAddress (h1h2_interfaces.GetAddress (1),
+  AddressValue receiverAddressFast (InetSocketAddress (h1h2_interfaces.GetAddress (1),
+                                                       receiverPort));
+  PacketSinkHelper receiverHelperFast ("ns3::TcpSocketFactory",
+                                       receiverAddressFast.Get());
+  receiverHelperFast.SetAttribute ("Protocol",
+                                   TypeIdValue (TcpSocketFactory::GetTypeId ()));
+
+  // Install receiver application
+  ApplicationContainer receiverAppFast = receiverHelperFast.Install (h2);
+  receiverAppFast.Start (Seconds (0.0));
+  receiverAppFast.Stop (Seconds ((double)time));
+
+  // Sender application
+  BulkSendHelper ftpFast ("ns3::TcpSocketFactory", Address ());
+  ftpFast.SetAttribute ("Protocol", TypeIdValue (TcpSocketFactory::GetTypeId ()));
+  ftpFast.SetAttribute ("Remote", receiverAddressFast);
+
+  // Install sender application
+  ApplicationContainer sourceAppFast = ftpFast.Install (h1);
+  sourceAppFast.Start (Seconds (0.0));
+  sourceAppFast.Stop (Seconds ((double)time));
+
+  // Start tracing 
+  Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnumFast, seqnumFastStream);
+
+  
+  /*** Slow TCP ***/
+
+  // Receiver application
+  AddressValue receiverAddressSlow (InetSocketAddress (h2h3_interfaces.GetAddress (1),
                                                    receiverPort));
-  PacketSinkHelper receiverHelper ("ns3::TcpSocketFactory",
-                                   receiverAddress.Get());
-  receiverHelper.SetAttribute ("Protocol",
+  PacketSinkHelper receiverHelperSlow ("ns3::TcpSocketFactory",
+                                   receiverAddressSlow.Get());
+  receiverHelperSlow.SetAttribute ("Protocol",
                                TypeIdValue (TcpSocketFactory::GetTypeId ()));
 
-  ApplicationContainer receiverApp = receiverHelper.Install (h2);
-  receiverApp.Start (Seconds (0.0));
-  receiverApp.Stop (Seconds ((double)time));
+  // Install receiver application
+  ApplicationContainer receiverAppSlow = receiverHelperSlow.Install (h3);
+  receiverAppSlow.Start (Seconds (0.0));
+  receiverAppSlow.Stop (Seconds ((double)time));
 
-  BulkSendHelper ftp ("ns3::TcpSocketFactory", Address ());
-  ftp.SetAttribute ("Protocol", TypeIdValue (TcpSocketFactory::GetTypeId ()));
-  ftp.SetAttribute ("Remote", receiverAddress);
+  // Sender application
+  BulkSendHelper ftpSlow ("ns3::TcpSocketFactory", Address ());
+  ftpSlow.SetAttribute ("Protocol", TypeIdValue (TcpSocketFactory::GetTypeId ()));
+  ftpSlow.SetAttribute ("Remote", receiverAddressSlow);
 
-  ApplicationContainer sourceApp = ftp.Install (h1);
-  sourceApp.Start (Seconds (0.0));
-  sourceApp.Stop (Seconds ((double)time));
+  // Install sender application
+  ApplicationContainer sourceAppSlow = ftpSlow.Install (h1);
+  sourceAppSlow.Start (Seconds (0.0));
+  sourceAppSlow.Stop (Seconds ((double)time));
 
-  Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceEstimatedBW, estimatedBWStream);
+  // Start tracing 
+  Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnumSlow, seqnumSlowStream);
 
-  // UDP
-  uint16_t port = 10003;
-  AddressValue addr (InetSocketAddress (h1h2_interfaces.GetAddress (1),
-                                                   port));
-  PacketSinkHelper udpReceiverHelper ("ns3::UdpSocketFactory",
-                                   addr.Get());
-
-  ApplicationContainer udpReceiverApp = udpReceiverHelper.Install (h2);
-  udpReceiverApp.Start (Seconds (0.0));
-  udpReceiverApp.Stop (Seconds ((double)time));
-
-  OnOffHelper udpOnOffHelper ("ns3::UdpSocketFactory", Address ());
-  udpOnOffHelper.SetConstantRate (DataRate ("1Mb/s"));
-  udpOnOffHelper.SetAttribute ("Remote", addr);
-
-  ApplicationContainer udpOnOffApp1 = udpOnOffHelper.Install (h1);
-  udpOnOffApp1.Start (Seconds (25.0));
-  udpOnOffApp1.Stop (Seconds (200.0));
-
-  ApplicationContainer udpOnOffApp2 = udpOnOffHelper.Install (h1);
-  udpOnOffApp2.Start (Seconds (50.0));
-  udpOnOffApp2.Stop (Seconds (75.0));
-
-  ApplicationContainer udpOnOffApp3 = udpOnOffHelper.Install (h1);
-  udpOnOffApp3.Start (Seconds (125.0));
-  udpOnOffApp3.Stop (Seconds (175.0));
+  /********** Run the Simulation **********/
 
   NS_LOG_UNCOND("Running the Simulation...");
   Simulator::Stop (Seconds ((double)time));
