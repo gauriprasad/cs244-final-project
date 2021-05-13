@@ -38,3 +38,7 @@ build/
 /.project
 
 version.cache
+
+.DS_Store
+.idea/
+venv/
