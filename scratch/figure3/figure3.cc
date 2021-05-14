@@ -38,9 +38,6 @@ static void
 EstimatedBWTracer (Ptr<OutputStreamWrapper> stream,
                    double oldval, double newval)
 {
-  NS_LOG_INFO (Simulator::Now ().GetSeconds () <<
-                                               " Estimated bandwidth from " << oldval << " to " << newval);
-
   *stream->GetStream () << Simulator::Now ().GetSeconds () << " "
                         << newval << std::endl;
 }
@@ -55,21 +52,31 @@ TraceEstimatedBW (Ptr<OutputStreamWrapper> estimatedBWStream)
 int
 main (int argc, char *argv[])
 {
-  NS_LOG_UNCOND ("Figure 3: TCPW with concurrent UDP traffic: bandwidth estimation");
+  // Enable logging
+  LogComponentEnable("Figure3", LOG_LEVEL_ALL);
+
+  NS_LOG_LOGIC ("Figure 3: TCPW with concurrent UDP traffic: bandwidth estimation");
+  std::string transport_prot = "TcpWestwood";
   int bw = 5; // Mbps
   int delay = 30; // milliseconds
   int time = 300; // seconds
 
+  CommandLine cmd (__FILE__);
+  cmd.AddValue ("transport_prot", "Transport protocol to use: TcpWestwood, TcpWestwoodPlus",
+                transport_prot);
+  cmd.Parse (argc, argv);
+
+  NS_LOG_LOGIC ("Running " + transport_prot);
+
   std::string bwStr = std::to_string(bw) + "Mbps";
   std::string delayStr = std::to_string(delay) + "ms";
 
-  std::string dir = "outputs/figure3/";
+  std::string dir = "outputs/figure3/" + transport_prot + "/";
+  transport_prot = std::string ("ns3::") + transport_prot;
   std::string estimatedBWStreamName = dir + "estimated-bw.tr";
   Ptr<OutputStreamWrapper> estimatedBWStream;
   AsciiTraceHelper asciiTraceHelper;
   estimatedBWStream = asciiTraceHelper.CreateFileStream (estimatedBWStreamName);
-
-  NS_LOG_UNCOND("Creating Nodes...");
 
   NodeContainer nodes;
   nodes.Create(2);
@@ -77,21 +84,34 @@ main (int argc, char *argv[])
   Ptr<Node> h1 = nodes.Get(0);
   Ptr<Node> h2 = nodes.Get(1);
 
-  NS_LOG_UNCOND("Configuring Channels...");
-
   PointToPointHelper link;
   link.SetDeviceAttribute ("DataRate", StringValue (bwStr));
   link.SetChannelAttribute ("Delay", StringValue (delayStr));
-
-  NS_LOG_UNCOND("Creating NetDevices...");
-
   NetDeviceContainer h1h2_NetDevices = link.Install (h1, h2);
 
-  Config::SetDefault("ns3::TcpL4Protocol::SocketType", TypeIdValue (TcpWestwood::GetTypeId()));
-  Config::SetDefault("ns3::TcpWestwood::ProtocolType", EnumValue(TcpWestwood::WESTWOODPLUS));
+  /******** Set TCP defaults ********/
+  bool sack = false;
+  std::string recovery = "ns3::TcpClassicRecovery";
+  Config::SetDefault ("ns3::TcpSocket::RcvBufSize", UintegerValue (1 << 21));
+  Config::SetDefault ("ns3::TcpSocket::SndBufSize", UintegerValue (1 << 21));
+  Config::SetDefault ("ns3::TcpSocketBase::Sack", BooleanValue (sack));
+  Config::SetDefault ("ns3::TcpL4Protocol::RecoveryType",
+                      TypeIdValue (TypeId::LookupByName (recovery)));
   Config::SetDefault("ns3::TcpWestwood::FilterType", EnumValue(TcpWestwood::TUSTIN));
-
-  NS_LOG_UNCOND("Installing Internet Stack...");
+  // Select TCP variant
+  if (transport_prot.compare ("ns3::TcpWestwoodPlus") == 0)
+  {
+    // TcpWestwoodPlus is not an actual TypeId name; we need TcpWestwood here
+    Config::SetDefault ("ns3::TcpL4Protocol::SocketType", TypeIdValue (TcpWestwood::GetTypeId ()));
+    // the default protocol type in ns3::TcpWestwood is WESTWOOD
+    Config::SetDefault ("ns3::TcpWestwood::ProtocolType", EnumValue (TcpWestwood::WESTWOODPLUS));
+  }
+  else
+  {
+    TypeId tcpTid;
+    NS_ABORT_MSG_UNLESS (TypeId::LookupByNameFailSafe (transport_prot, &tcpTid), "TypeId " << transport_prot << " not found");
+    Config::SetDefault ("ns3::TcpL4Protocol::SocketType", TypeIdValue (TypeId::LookupByName (transport_prot)));
+  }
 
   InternetStackHelper stack;
   stack.InstallAll ();
@@ -102,8 +122,6 @@ main (int argc, char *argv[])
   address.NewNetwork ();
 
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
-
-  NS_LOG_UNCOND("Setting up the Application...");
 
   // TCP
   uint16_t receiverPort = 5001;
@@ -155,7 +173,6 @@ main (int argc, char *argv[])
   udpOnOffApp3.Start (Seconds (125.0));
   udpOnOffApp3.Stop (Seconds (175.0));
 
-  NS_LOG_UNCOND("Running the Simulation...");
   Simulator::Stop (Seconds ((double)time));
   Simulator::Run ();
   Simulator::Destroy ();
