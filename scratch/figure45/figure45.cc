@@ -30,7 +30,7 @@
 
 using namespace ns3;
 
-NS_LOG_COMPONENT_DEFINE ("SeqNum");
+NS_LOG_COMPONENT_DEFINE ("Figure45");
 
 static double TRACE_START_TIME = 0.05;
 
@@ -70,10 +70,13 @@ TraceSeqnumSlow (Ptr<OutputStreamWrapper> seqnumSlowStream)
                                  MakeBoundCallback (&SeqnumSlowTracer, seqnumSlowStream));
 }
 
+// If going to change to RED queue, start here: 
+// https://www.nsnam.org/doxygen/queue-discs-benchmark_8cc_source.html
+
 int
 main (int argc, char *argv[])
 {
-  NS_LOG_UNCOND ("Figure 4: TCPW sequence numbers with 50 ms and 200 ms RTT without RED: ");
+  NS_LOG_UNCOND ("Figure 4: TCPW sequence numbers with 50 ms and 200 ms RTT: ");
   int time = 200; // seconds
   std::string transport_prot = "TcpWestwood";
 
@@ -84,12 +87,12 @@ main (int argc, char *argv[])
   /********** Declare output files **********/
   
   AsciiTraceHelper asciiTraceHelper;
-  std::string dir = "outputs/";
+  std::string dir = "outputs/figure45/";
 
   std::string seqnumFastStreamName = dir + transport_prot + "SeqnumFast.tr";
   Ptr<OutputStreamWrapper> seqnumFastStream;
   seqnumFastStream = asciiTraceHelper.CreateFileStream (seqnumFastStreamName);
-  
+
   std::string seqnumSlowStreamName = dir + transport_prot + "SeqnumSlow.tr";
   Ptr<OutputStreamWrapper> seqnumSlowStream;
   seqnumSlowStream = asciiTraceHelper.CreateFileStream (seqnumSlowStreamName);
@@ -112,12 +115,12 @@ main (int argc, char *argv[])
   PointToPointHelper bottleneckLink;
   bottleneckLink.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
   bottleneckLink.SetChannelAttribute ("Delay", StringValue ("25ms"));
-  //bottleneckLink.SetQueue ("ns3::DropTailQueue", "MaxSize", StringValue ("1p"));
+  bottleneckLink.SetQueue ("ns3::DropTailQueue", "MaxSize", StringValue ("10p"));
 
   PointToPointHelper longLink;
   longLink.SetDeviceAttribute ("DataRate", StringValue ("100Mbps"));
   longLink.SetChannelAttribute ("Delay", StringValue ("75ms"));
-  //bottleneckLink.SetQueue ("ns3::DropTailQueue", "MaxSize", StringValue ("1p"));
+  longLink.SetQueue ("ns3::DropTailQueue", "MaxSize", StringValue ("10p"));
 
   /********** Create NetDevices **********/
 
@@ -128,9 +131,13 @@ main (int argc, char *argv[])
 
   /********** Set TCP defaults **********/
 
-  // TODO set packet size to 400 bytes? 
+  NS_LOG_UNCOND("Setting TCP defaults...");
+  
+  Config::SetDefault ("ns3::TcpSocketBase::Sack", BooleanValue (false));
+  Config::SetDefault ("ns3::TcpL4Protocol::RecoveryType", TypeIdValue (TypeId::LookupByName ("ns3::TcpClassicRecovery")));
 
-  /*
+  // Set packet size to 400 bytes
+
   PppHeader ppph;
   Ipv4Header ipv4h;
   TcpHeader tcph;
@@ -138,29 +145,25 @@ main (int argc, char *argv[])
                             - ppph.GetSerializedSize ()
                             - ipv4h.GetSerializedSize ()
                             - tcph.GetSerializedSize ();
+  // segment size = 400 - 42
   Config::SetDefault("ns3::TcpSocket::SegmentSize", UintegerValue(tcpSegmentSize));
-  */
-
-  // Set RED on or off
-
-  // TODO 
 
   // Choose Westwood or Reno
 
-  if (transport_prot == "TcpWestwood") {
+  if (transport_prot.compare("TcpWestwood") == 0) {
       Config::SetDefault ("ns3::TcpL4Protocol::SocketType", TypeIdValue (TcpWestwood::GetTypeId()));
-      Config::SetDefault ("ns3::TcpWestwood::ProtocolType", EnumValue(TcpWestwood::WESTWOODPLUS));
+      Config::SetDefault ("ns3::TcpWestwood::ProtocolType", EnumValue(TcpWestwood::WESTWOOD));
       Config::SetDefault ("ns3::TcpWestwood::FilterType", EnumValue(TcpWestwood::TUSTIN));
-  } else if (transport_prot == "TcpReno") {
+  } else if (transport_prot.compare("TcpReno") == 0) {
       Config::SetDefault ("ns3::TcpL4Protocol::SocketType", TypeIdValue (TcpNewReno::GetTypeId()));
   } else {
       NS_LOG_UNCOND("BAD TCP PROT");
   }
-  
+
   /********** Install Internet Stack **********/
 
   NS_LOG_UNCOND("Installing Internet Stack...");
-
+  
   InternetStackHelper stack;
   stack.InstallAll ();
 
@@ -206,7 +209,6 @@ main (int argc, char *argv[])
   // Start tracing 
   Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnumFast, seqnumFastStream);
 
-  
   /*** Slow TCP ***/
 
   // Receiver application
