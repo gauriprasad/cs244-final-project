@@ -3,6 +3,6 @@
 !.gitignore
 !subdir/
 !scratch-simulator.cc
-!bandwidthestimation
+!figure3
 !seqnums
 !figure1213

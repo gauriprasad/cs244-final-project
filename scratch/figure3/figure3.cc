@@ -30,7 +30,7 @@
 
 using namespace ns3;
 
-NS_LOG_COMPONENT_DEFINE ("BandwidthEstimation");
+NS_LOG_COMPONENT_DEFINE ("Figure3");
 
 static double TRACE_START_TIME = 0.05;
 
@@ -63,7 +63,7 @@ main (int argc, char *argv[])
   std::string bwStr = std::to_string(bw) + "Mbps";
   std::string delayStr = std::to_string(delay) + "ms";
 
-  std::string dir = "outputs/";
+  std::string dir = "outputs/figure3/";
   std::string estimatedBWStreamName = dir + "estimated-bw.tr";
   Ptr<OutputStreamWrapper> estimatedBWStream;
   AsciiTraceHelper asciiTraceHelper;
