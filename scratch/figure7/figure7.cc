@@ -35,8 +35,8 @@ NS_LOG_COMPONENT_DEFINE ("Figure7");
 static double TRACE_START_TIME = 0.05;
 
 static void
-SeqnumTracer0 (Ptr<OutputStreamWrapper> stream,
-               SequenceNumber32 oldval, SequenceNumber32 newval)
+SeqnumTracer (Ptr<OutputStreamWrapper> stream,
+              SequenceNumber32 oldval, SequenceNumber32 newval)
 {
   NS_LOG_INFO (Simulator::Now ().GetSeconds () << " Sequence numbers from " << oldval << " to " << newval);
 
@@ -44,92 +44,92 @@ SeqnumTracer0 (Ptr<OutputStreamWrapper> stream,
                         << newval << std::endl;
 }
 
+/*** Tracers for node 0 ***/
+
 static void
-TraceSeqnum0 (Ptr<OutputStreamWrapper> seqnumStream)
+TraceSeqnum0_0 (Ptr<OutputStreamWrapper> seqnumStream)
 {
   Config::ConnectWithoutContext ("/NodeList/0/$ns3::TcpL4Protocol/SocketList/0/HighestSequence",
-                                 MakeBoundCallback (&SeqnumTracer0, seqnumStream));
+                                 MakeBoundCallback (&SeqnumTracer, seqnumStream));
 }
 
 static void
-SeqnumTracer1 (Ptr<OutputStreamWrapper> stream,
-               SequenceNumber32 oldval, SequenceNumber32 newval)
-{
-  NS_LOG_INFO (Simulator::Now ().GetSeconds () << " Sequence numbers from " << oldval << " to " << newval);
-
-  *stream->GetStream () << Simulator::Now ().GetSeconds () << " "
-                        << newval << std::endl;
-}
-
-static void
-TraceSeqnum1 (Ptr<OutputStreamWrapper> seqnumStream)
+TraceSeqnum0_1 (Ptr<OutputStreamWrapper> seqnumStream)
 {
   Config::ConnectWithoutContext ("/NodeList/0/$ns3::TcpL4Protocol/SocketList/1/HighestSequence",
-                                 MakeBoundCallback (&SeqnumTracer1, seqnumStream));
+                                 MakeBoundCallback (&SeqnumTracer, seqnumStream));
 }
 
 static void
-SeqnumTracer2 (Ptr<OutputStreamWrapper> stream,
-               SequenceNumber32 oldval, SequenceNumber32 newval)
-{
-  NS_LOG_INFO (Simulator::Now ().GetSeconds () << " Sequence numbers from " << oldval << " to " << newval);
-
-  *stream->GetStream () << Simulator::Now ().GetSeconds () << " "
-                        << newval << std::endl;
-}
-
-static void
-TraceSeqnum2 (Ptr<OutputStreamWrapper> seqnumStream)
+TraceSeqnum0_2 (Ptr<OutputStreamWrapper> seqnumStream)
 {
   Config::ConnectWithoutContext ("/NodeList/0/$ns3::TcpL4Protocol/SocketList/2/HighestSequence",
-                                 MakeBoundCallback (&SeqnumTracer2, seqnumStream));
+                                 MakeBoundCallback (&SeqnumTracer, seqnumStream));
 }
 
 static void
-SeqnumTracer3 (Ptr<OutputStreamWrapper> stream,
-               SequenceNumber32 oldval, SequenceNumber32 newval)
-{
-  NS_LOG_INFO (Simulator::Now ().GetSeconds () << " Sequence numbers from " << oldval << " to " << newval);
-
-  *stream->GetStream () << Simulator::Now ().GetSeconds () << " "
-                        << newval << std::endl;
-}
-
-static void
-TraceSeqnum3 (Ptr<OutputStreamWrapper> seqnumStream)
+TraceSeqnum0_3 (Ptr<OutputStreamWrapper> seqnumStream)
 {
   Config::ConnectWithoutContext ("/NodeList/0/$ns3::TcpL4Protocol/SocketList/3/HighestSequence",
-                                 MakeBoundCallback (&SeqnumTracer3, seqnumStream));
+                                 MakeBoundCallback (&SeqnumTracer, seqnumStream));
 }
 
 static void
-SeqnumTracer4 (Ptr<OutputStreamWrapper> stream,
-               SequenceNumber32 oldval, SequenceNumber32 newval)
-{
-  NS_LOG_INFO (Simulator::Now ().GetSeconds () << " Sequence numbers from " << oldval << " to " << newval);
-
-  *stream->GetStream () << Simulator::Now ().GetSeconds () << " "
-                        << newval << std::endl;
-}
-
-static void
-TraceSeqnum4 (Ptr<OutputStreamWrapper> seqnumStream)
+TraceSeqnum0_4 (Ptr<OutputStreamWrapper> seqnumStream)
 {
   Config::ConnectWithoutContext ("/NodeList/0/$ns3::TcpL4Protocol/SocketList/4/HighestSequence",
-                                 MakeBoundCallback (&SeqnumTracer4, seqnumStream));
+                                 MakeBoundCallback (&SeqnumTracer, seqnumStream));
 }
 
+/*** Tracers for node 1 ***/
+
+static void
+TraceSeqnum1_0 (Ptr<OutputStreamWrapper> seqnumStream)
+{
+  Config::ConnectWithoutContext ("/NodeList/1/$ns3::TcpL4Protocol/SocketList/0/HighestSequence",
+                                 MakeBoundCallback (&SeqnumTracer, seqnumStream));
+}
+
+static void
+TraceSeqnum1_1 (Ptr<OutputStreamWrapper> seqnumStream)
+{
+  Config::ConnectWithoutContext ("/NodeList/1/$ns3::TcpL4Protocol/SocketList/1/HighestSequence",
+                                 MakeBoundCallback (&SeqnumTracer, seqnumStream));
+}
+
+static void
+TraceSeqnum1_2 (Ptr<OutputStreamWrapper> seqnumStream)
+{
+  Config::ConnectWithoutContext ("/NodeList/1/$ns3::TcpL4Protocol/SocketList/2/HighestSequence",
+                                 MakeBoundCallback (&SeqnumTracer, seqnumStream));
+}
+
+static void
+TraceSeqnum1_3 (Ptr<OutputStreamWrapper> seqnumStream)
+{
+  Config::ConnectWithoutContext ("/NodeList/1/$ns3::TcpL4Protocol/SocketList/3/HighestSequence",
+                                 MakeBoundCallback (&SeqnumTracer, seqnumStream));
+}
+
+static void
+TraceSeqnum1_4 (Ptr<OutputStreamWrapper> seqnumStream)
+{
+  Config::ConnectWithoutContext ("/NodeList/1/$ns3::TcpL4Protocol/SocketList/4/HighestSequence",
+                                 MakeBoundCallback (&SeqnumTracer, seqnumStream));
+}
+
+
 void
-setup_application(Ptr<Node> h1, Ptr<Node> h2, Ipv4InterfaceContainer h1h2_interfaces, int time, int receiverPort)
+setup_application(Ptr<Node> s, Ptr<Node> d, Ipv4InterfaceContainer rd_interfaces, int time, int receiverPort)
 {
   // Receiver application
-  AddressValue receiverAddress (InetSocketAddress (h1h2_interfaces.GetAddress (1),
+  AddressValue receiverAddress (InetSocketAddress (rd_interfaces.GetAddress (1),
                                                    receiverPort));
   PacketSinkHelper receiverHelper ("ns3::TcpSocketFactory", receiverAddress.Get());
   receiverHelper.SetAttribute ("Protocol", TypeIdValue (TcpSocketFactory::GetTypeId ()));
 
   // Install receiver application
-  ApplicationContainer receiverApp = receiverHelper.Install (h2);
+  ApplicationContainer receiverApp = receiverHelper.Install (d);
   receiverApp.Start (Seconds (0.0));
   receiverApp.Stop (Seconds ((double)time));
 
@@ -139,7 +139,7 @@ setup_application(Ptr<Node> h1, Ptr<Node> h2, Ipv4InterfaceContainer h1h2_interf
   ftp.SetAttribute ("Remote", receiverAddress);
 
   // Install sender application
-  ApplicationContainer sourceApp = ftp.Install (h1);
+  ApplicationContainer sourceApp = ftp.Install (s);
   sourceApp.Start (Seconds (0.0));
   sourceApp.Stop (Seconds ((double)time));
 }
@@ -180,25 +180,46 @@ main (int argc, char *argv[])
   NS_LOG_UNCOND("Creating Nodes...");
 
   NodeContainer nodes;
-  nodes.Create(2);
+  nodes.Create(4);
 
-  Ptr<Node> h1 = nodes.Get(0);
-  Ptr<Node> h2 = nodes.Get(1);
+  Ptr<Node> s1 = nodes.Get(0);
+  Ptr<Node> s2 = nodes.Get(1);
+  Ptr<Node> r = nodes.Get(2);
+  Ptr<Node> d = nodes.Get(3);
   
   /********** Create Channels **********/
 
   NS_LOG_UNCOND("Configuring Channels..."); 
+  
+  PointToPointHelper s1rLink;
+  s1rLink.SetDeviceAttribute ("DataRate", StringValue ("100Mbps"));
+  s1rLink.SetChannelAttribute ("Delay", StringValue ("1ms"));
+
+  PointToPointHelper s2rLink;
+  s2rLink.SetDeviceAttribute ("DataRate", StringValue ("100Mbps"));
+  s2rLink.SetChannelAttribute ("Delay", StringValue ("1ms"));
+
+  // Configure the error model
+  // REMOVE TO TEST GOOD LINK
+  Ptr<ExponentialRandomVariable> uv = CreateObject<ExponentialRandomVariable> ();
+  uv->SetStream (50);
+  RateErrorModel error_model;
+  error_model.SetRandomVariable (uv);
+  error_model.SetUnit (RateErrorModel::ERROR_UNIT_PACKET);
+  error_model.SetRate (0.01);
 
   PointToPointHelper bottleneckLink;
   bottleneckLink.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
-  bottleneckLink.SetChannelAttribute ("Delay", StringValue ("50ms"));
-  //bottleneckLink.SetQueue ("ns3::DropTailQueue", "MaxSize", StringValue ("10p"));
+  bottleneckLink.SetChannelAttribute ("Delay", StringValue ("49ms"));
+  bottleneckLink.SetDeviceAttribute ("ReceiveErrorModel", PointerValue (&error_model));
 
   /********** Create NetDevices **********/
 
   NS_LOG_UNCOND("Creating NetDevices...");
 
-  NetDeviceContainer h1h2_NetDevices = bottleneckLink.Install (h1, h2);
+  NetDeviceContainer s1r_NetDevices = s1rLink.Install (s1, r);
+  NetDeviceContainer s2r_NetDevices = s2rLink.Install (s2, r);
+  NetDeviceContainer rd_NetDevices = bottleneckLink.Install (r, d);
 
   /********** Set TCP defaults **********/
 
@@ -231,8 +252,11 @@ main (int argc, char *argv[])
   // Set IP addresses of nodes in network
   Ipv4AddressHelper address;
   address.SetBase ("10.0.0.0", "255.255.255.0");
-  Ipv4InterfaceContainer h1h2_interfaces = address.Assign (h1h2_NetDevices);
+  Ipv4InterfaceContainer s1r_interfaces = address.Assign (s1r_NetDevices);
   address.NewNetwork ();
+  Ipv4InterfaceContainer s2r_interfaces = address.Assign (s2r_NetDevices);
+  address.NewNetwork ();
+  Ipv4InterfaceContainer rd_interfaces = address.Assign (rd_NetDevices);
 
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
@@ -240,28 +264,74 @@ main (int argc, char *argv[])
   
   NS_LOG_UNCOND("Setting up the Application...");
   
-  // Create TCP Westwood channels
+  // Set socket type for s0 and s1
+  TypeId tid;
+  std::string specificNode;
   
-  Config::SetDefault ("ns3::TcpL4Protocol::SocketType", TypeIdValue (TcpWestwood::GetTypeId()));
+  tid = TypeId::LookupByName("ns3::TcpWestwood");
+  std::stringstream node0Id;
+  node0Id << nodes.Get (0)->GetId ();
+  specificNode = "/NodeList/" + node0Id.str () + "/$ns3::TcpL4Protocol/SocketType";
+  Config::Set (specificNode, TypeIdValue (tid));
+  
+  tid = TypeId::LookupByName("ns3::TcpNewReno");
+  std::stringstream node1Id;
+  node1Id << nodes.Get (1)->GetId ();
+  specificNode = "/NodeList/" + node1Id.str () + "/$ns3::TcpL4Protocol/SocketType";
+  Config::Set (specificNode, TypeIdValue (tid));
+  
+  // Create TCP Westwood channels
+
   int numWestwood = 5 - numReno;
   for (int i = 0; i < numWestwood; i++) {
-    setup_application(h1, h2, h1h2_interfaces, time, 5001 + i);
+    setup_application(s1, d, rd_interfaces, time, 5001 + i);
   }
 
   // Create TCP Reno channels
-
-  Config::SetDefault ("ns3::TcpL4Protocol::SocketType", TypeIdValue (TcpNewReno::GetTypeId()));
-  for (int i = 0; i < numReno; i++) {
-    setup_application(h1, h2, h1h2_interfaces, time, 5001 + numWestwood + i);
-  }
   
+  for (int i = 0; i < numReno; i++) {
+    setup_application(s2, d, rd_interfaces, time, 5001 + numWestwood + i);
+  }
+
   // Schedule traces
 
-  Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum0, seqnumStream0);
-  Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum1, seqnumStream1);
-  Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum2, seqnumStream2);
-  Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum3, seqnumStream3);
-  Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum4, seqnumStream4);
+  if (numReno == 0) {
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum0_0, seqnumStream0);
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum0_1, seqnumStream1);
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum0_2, seqnumStream2);
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum0_3, seqnumStream3);
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum0_4, seqnumStream4);
+  } else if (numReno == 1) {
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum0_0, seqnumStream0);
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum0_1, seqnumStream1);
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum0_2, seqnumStream2);
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum0_3, seqnumStream3);
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum1_0, seqnumStream4);
+  } else if (numReno == 2) {
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum0_0, seqnumStream0);
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum0_1, seqnumStream1);
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum0_2, seqnumStream2);
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum1_0, seqnumStream3);
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum1_1, seqnumStream4);
+  } else if (numReno == 3) {
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum0_0, seqnumStream0);
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum0_1, seqnumStream1);
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum1_0, seqnumStream2);
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum1_1, seqnumStream3);
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum1_2, seqnumStream4);
+  } else if (numReno == 4) {
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum0_0, seqnumStream0);
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum1_0, seqnumStream1);
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum1_1, seqnumStream2);
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum1_2, seqnumStream3);
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum1_3, seqnumStream4);
+  } else {
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum1_0, seqnumStream0);
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum1_1, seqnumStream1);
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum1_2, seqnumStream2);
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum1_3, seqnumStream3);
+    Simulator::Schedule (Seconds (TRACE_START_TIME), &TraceSeqnum1_4, seqnumStream4);
+  }
 
   /********** Run the Simulation **********/
 
