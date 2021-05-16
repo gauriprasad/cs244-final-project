@@ -18,11 +18,12 @@ for a in algorithms:
     estimatedBWFileName = os.path.join(dir, 'figure3.png')
 
     plt.figure()
-    plt.plot(estimatedBWTraceTimes, estimatedBWTraceVals, label="BW estimate")
+    plt.plot(estimatedBWTraceTimes, estimatedBWTraceVals, "x", label="BW estimate")
     plt.step([0, 25, 50, 75, 125, 175, 200, 300], [0, 5, 4, 3, 4, 3, 4, 5], label="actual BW")
     plt.ylabel('Bandwidth estimation (Mb/sec)')
     plt.xlabel('Time (sec)')
     plt.title('Figure 3: TCPW with concurrent UDP traffic: bandwidth estimation')
+    plt.ylim([0, 6])
     plt.grid()
     plt.legend()
     plt.savefig(estimatedBWFileName)

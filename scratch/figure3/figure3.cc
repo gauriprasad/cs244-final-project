@@ -58,7 +58,7 @@ main (int argc, char *argv[])
   NS_LOG_LOGIC ("Figure 3: TCPW with concurrent UDP traffic: bandwidth estimation");
   std::string transport_prot = "TcpWestwood";
   int bw = 5; // Mbps
-  int delay = 30; // milliseconds
+  int delay = 1000; // milliseconds
   int time = 300; // seconds
 
   CommandLine cmd (__FILE__);
