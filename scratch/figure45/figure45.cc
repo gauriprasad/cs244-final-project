@@ -70,9 +70,6 @@ TraceSeqnumSlow (Ptr<OutputStreamWrapper> seqnumSlowStream)
                                  MakeBoundCallback (&SeqnumSlowTracer, seqnumSlowStream));
 }
 
-// If going to change to RED queue, start here: 
-// https://www.nsnam.org/doxygen/queue-discs-benchmark_8cc_source.html
-
 int
 main (int argc, char *argv[])
 {

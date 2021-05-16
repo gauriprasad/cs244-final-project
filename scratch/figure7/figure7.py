@@ -7,9 +7,10 @@ import sys
 # Plot the bandwidth
 
 numReno = int(sys.argv[1])
+linkType = sys.argv[2]
 
 outputs_dir = 'outputs/figure7'
-fileName = os.path.join(outputs_dir,'friendliness_' + str(5 - numReno) + 'ww' + str(numReno) + 'nr_5Mb.png')
+fileName = os.path.join(outputs_dir,'friendliness_' + linkType + str(5 - numReno) + 'ww' + str(numReno) + 'nr_5Mb.png')
 
 # Read in trace values
 
@@ -22,23 +23,23 @@ def read_trace(arrTimes, arrVals, trFile):
 
 times0 = []
 vals0 = []
-read_trace(times0, vals0, str(numReno) + 'reno_seqnums0.tr')
+read_trace(times0, vals0, linkType + str(numReno) + 'reno_seqnums0.tr')
 
 times1 = []
 vals1 = []
-read_trace(times1, vals1, str(numReno) + 'reno_seqnums1.tr')
+read_trace(times1, vals1, linkType + str(numReno) + 'reno_seqnums1.tr')
 
 times2 = []
 vals2 = []
-read_trace(times2, vals2, str(numReno) + 'reno_seqnums2.tr')
+read_trace(times2, vals2, linkType + str(numReno) + 'reno_seqnums2.tr')
 
 times3 = []
 vals3 = []
-read_trace(times3, vals3, str(numReno) + 'reno_seqnums3.tr')
+read_trace(times3, vals3, linkType + str(numReno) + 'reno_seqnums3.tr')
 
 times4 = []
 vals4 = []
-read_trace(times4, vals4, str(numReno) + 'reno_seqnums4.tr')
+read_trace(times4, vals4, linkType + str(numReno) + 'reno_seqnums4.tr')
 
 # Plot
 
@@ -57,7 +58,7 @@ plt.plot(times1, vals1, c=c_s[1], label=label_s[1])
 plt.plot(times2, vals2, c=c_s[2], label=label_s[2])
 plt.plot(times3, vals3, c=c_s[3], label=label_s[3])
 plt.plot(times4, vals4, c=c_s[4], label=label_s[4])
-plt.legend(loc='upper left')
+plt.legend(loc='best')
 plt.ylabel('Average Throughput (Mb/Sec)')
 plt.xlabel('Seconds')
 plt.grid()

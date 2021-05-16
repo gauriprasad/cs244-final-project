@@ -150,9 +150,11 @@ main (int argc, char *argv[])
   NS_LOG_UNCOND ("Figure 7: Average throughput vs. No. of Reno connections");
   int time = 200; // seconds
   int numReno = 0;
+  std::string linkType = "good";
 
   CommandLine cmd (__FILE__);
   cmd.AddValue ("numReno", "Number of Reno connections (5 total)", numReno);
+  cmd.AddValue ("linkType", "Type of link (good or lossy)", linkType);
   cmd.Parse (argc, argv);
 
   /********** Declare output files **********/
@@ -160,19 +162,19 @@ main (int argc, char *argv[])
   AsciiTraceHelper asciiTraceHelper;
   std::string dir = "outputs/figure7/";
 
-  std::string seqnumStreamName0 = dir + std::to_string(numReno) + "reno_seqnums0.tr";
+  std::string seqnumStreamName0 = dir + linkType + std::to_string(numReno) + "reno_seqnums0.tr";
   Ptr<OutputStreamWrapper> seqnumStream0 = asciiTraceHelper.CreateFileStream (seqnumStreamName0);
 
-  std::string seqnumStreamName1 = dir + std::to_string(numReno) + "reno_seqnums1.tr";
+  std::string seqnumStreamName1 = dir + linkType + std::to_string(numReno) + "reno_seqnums1.tr";
   Ptr<OutputStreamWrapper> seqnumStream1 = asciiTraceHelper.CreateFileStream (seqnumStreamName1);
 
-  std::string seqnumStreamName2 = dir + std::to_string(numReno) + "reno_seqnums2.tr";
+  std::string seqnumStreamName2 = dir + linkType + std::to_string(numReno) + "reno_seqnums2.tr";
   Ptr<OutputStreamWrapper> seqnumStream2 = asciiTraceHelper.CreateFileStream (seqnumStreamName2);
 
-  std::string seqnumStreamName3 = dir + std::to_string(numReno) + "reno_seqnums3.tr";
+  std::string seqnumStreamName3 = dir + linkType + std::to_string(numReno) + "reno_seqnums3.tr";
   Ptr<OutputStreamWrapper> seqnumStream3 = asciiTraceHelper.CreateFileStream (seqnumStreamName3);
 
-  std::string seqnumStreamName4 = dir + std::to_string(numReno) + "reno_seqnums4.tr";
+  std::string seqnumStreamName4 = dir + linkType + std::to_string(numReno) + "reno_seqnums4.tr";
   Ptr<OutputStreamWrapper> seqnumStream4 = asciiTraceHelper.CreateFileStream (seqnumStreamName4);
 
   /********** Create Nodes **********/
@@ -199,19 +201,21 @@ main (int argc, char *argv[])
   s2rLink.SetDeviceAttribute ("DataRate", StringValue ("100Mbps"));
   s2rLink.SetChannelAttribute ("Delay", StringValue ("1ms"));
 
-  // Configure the error model
-  // REMOVE TO TEST GOOD LINK
+  PointToPointHelper bottleneckLink;
+  bottleneckLink.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
+  bottleneckLink.SetChannelAttribute ("Delay", StringValue ("49ms"));
+
   Ptr<ExponentialRandomVariable> uv = CreateObject<ExponentialRandomVariable> ();
   uv->SetStream (50);
+
   RateErrorModel error_model;
   error_model.SetRandomVariable (uv);
   error_model.SetUnit (RateErrorModel::ERROR_UNIT_PACKET);
   error_model.SetRate (0.01);
 
-  PointToPointHelper bottleneckLink;
-  bottleneckLink.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
-  bottleneckLink.SetChannelAttribute ("Delay", StringValue ("49ms"));
-  bottleneckLink.SetDeviceAttribute ("ReceiveErrorModel", PointerValue (&error_model));
+  if (linkType.compare("lossy") == 0) {
+    bottleneckLink.SetDeviceAttribute ("ReceiveErrorModel", PointerValue (&error_model));
+  }
 
   /********** Create NetDevices **********/
 
