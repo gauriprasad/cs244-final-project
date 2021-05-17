@@ -111,15 +111,13 @@ int main (int argc, char *argv[])
   uint32_t tcp_adu_size = mtu_bytes - 20 - (ip_header + tcp_header);
 
   /******** Set TCP defaults ********/
-  Config::SetDefault ("ns3::TcpSocket::RcvBufSize", UintegerValue (1 << 21));
-  Config::SetDefault ("ns3::TcpSocket::SndBufSize", UintegerValue (1 << 21));
-  Config::SetDefault ("ns3::TcpSocketBase::Sack", BooleanValue (sack));
-  Config::SetDefault ("ns3::TcpL4Protocol::RecoveryType",
-                      TypeIdValue (TypeId::LookupByName (recovery)));
-  Config::SetDefault("ns3::TcpWestwood::FilterType", EnumValue(TcpWestwood::TUSTIN));
-
   // Select TCP variant
-  if (transport_prot.compare ("ns3::TcpWestwoodPlus") == 0)
+  if (transport_prot.compare ("ns3::TcpSack") == 0)
+  {
+    sack = true;
+    transport_prot = std::string ("ns3::TcpNewReno");
+  }
+  else if (transport_prot.compare ("ns3::TcpWestwoodPlus") == 0)
   {
     // TcpWestwoodPlus is not an actual TypeId name; we need TcpWestwood here
     Config::SetDefault ("ns3::TcpL4Protocol::SocketType", TypeIdValue (TcpWestwood::GetTypeId ()));
@@ -132,6 +130,12 @@ int main (int argc, char *argv[])
     NS_ABORT_MSG_UNLESS (TypeId::LookupByNameFailSafe (transport_prot, &tcpTid), "TypeId " << transport_prot << " not found");
     Config::SetDefault ("ns3::TcpL4Protocol::SocketType", TypeIdValue (TypeId::LookupByName (transport_prot)));
   }
+  Config::SetDefault ("ns3::TcpSocket::RcvBufSize", UintegerValue (1 << 21));
+  Config::SetDefault ("ns3::TcpSocket::SndBufSize", UintegerValue (1 << 21));
+  Config::SetDefault ("ns3::TcpSocketBase::Sack", BooleanValue (sack));
+  Config::SetDefault ("ns3::TcpL4Protocol::RecoveryType",
+                      TypeIdValue (TypeId::LookupByName (recovery)));
+  Config::SetDefault("ns3::TcpWestwood::FilterType", EnumValue(TcpWestwood::TUSTIN));
 
   // Create gateways, sources, and sinks
   NodeContainer gateways;

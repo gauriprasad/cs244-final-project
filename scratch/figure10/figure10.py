@@ -6,8 +6,8 @@ import numpy as np
 # Plot the Throughput over Delay
 
 dir = "outputs/figure10/"
-algorithms = ["TcpNewReno", "TcpVegas", "TcpWestwood", "TcpWestwoodPlus"]
-delays = [5, 10, 25, 50, 100, 250]
+algorithms = ["TcpNewReno", "TcpSack", "TcpWestwood", "TcpWestwoodPlus", "TcpVegas"]
+delays = [1, 2.5, 5, 10, 25, 50, 100, 250]
 
 plt.figure()
 for a in algorithms:
