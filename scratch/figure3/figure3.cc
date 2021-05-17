@@ -78,16 +78,13 @@ main (int argc, char *argv[])
   AsciiTraceHelper asciiTraceHelper;
   estimatedBWStream = asciiTraceHelper.CreateFileStream (estimatedBWStreamName);
 
-  NodeContainer nodes;
-  nodes.Create(2);
-
-  Ptr<Node> h1 = nodes.Get(0);
-  Ptr<Node> h2 = nodes.Get(1);
-
-  PointToPointHelper link;
-  link.SetDeviceAttribute ("DataRate", StringValue (bwStr));
-  link.SetChannelAttribute ("Delay", StringValue (delayStr));
-  NetDeviceContainer h1h2_NetDevices = link.Install (h1, h2);
+  uint32_t mtu_bytes = 400;
+  // Calculate the ADU size
+  Header* temp_header = new Ipv4Header ();
+  uint32_t ip_header = temp_header->GetSerializedSize ();
+  temp_header = new TcpHeader ();
+  uint32_t tcp_header = temp_header->GetSerializedSize ();
+  uint32_t tcp_adu_size = mtu_bytes - 20 - (ip_header + tcp_header);
 
   /******** Set TCP defaults ********/
   bool sack = false;
@@ -112,6 +109,17 @@ main (int argc, char *argv[])
     NS_ABORT_MSG_UNLESS (TypeId::LookupByNameFailSafe (transport_prot, &tcpTid), "TypeId " << transport_prot << " not found");
     Config::SetDefault ("ns3::TcpL4Protocol::SocketType", TypeIdValue (TypeId::LookupByName (transport_prot)));
   }
+
+  NodeContainer nodes;
+  nodes.Create(2);
+
+  Ptr<Node> h1 = nodes.Get(0);
+  Ptr<Node> h2 = nodes.Get(1);
+
+  PointToPointHelper link;
+  link.SetDeviceAttribute ("DataRate", StringValue (bwStr));
+  link.SetChannelAttribute ("Delay", StringValue (delayStr));
+  NetDeviceContainer h1h2_NetDevices = link.Install (h1, h2);
 
   InternetStackHelper stack;
   stack.InstallAll ();
@@ -139,6 +147,7 @@ main (int argc, char *argv[])
   BulkSendHelper ftp ("ns3::TcpSocketFactory", Address ());
   ftp.SetAttribute ("Protocol", TypeIdValue (TcpSocketFactory::GetTypeId ()));
   ftp.SetAttribute ("Remote", receiverAddress);
+  ftp.SetAttribute ("SendSize", UintegerValue (tcp_adu_size));
 
   ApplicationContainer sourceApp = ftp.Install (h1);
   sourceApp.Start (Seconds (0.0));
@@ -160,6 +169,7 @@ main (int argc, char *argv[])
   OnOffHelper udpOnOffHelper ("ns3::UdpSocketFactory", Address ());
   udpOnOffHelper.SetConstantRate (DataRate ("1Mb/s"));
   udpOnOffHelper.SetAttribute ("Remote", addr);
+  udpOnOffHelper.SetAttribute ("PacketSize", UintegerValue (tcp_adu_size));
 
   ApplicationContainer udpOnOffApp1 = udpOnOffHelper.Install (h1);
   udpOnOffApp1.Start (Seconds (25.0));
