@@ -70,7 +70,7 @@ int main (int argc, char *argv[])
   LogComponentEnable("Figure10", LOG_LEVEL_ALL);
 
   std::string transport_prot = "TcpWestwood";
-  double error_p = 0.005;
+  double error_p = 0;
   std::string bw_wireless = "2Mbps";
   std::string delay_wireless = "0.01ms";
   std::string bw_wired = "10Mbps";

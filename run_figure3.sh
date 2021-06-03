@@ -1,5 +1,8 @@
 #!/bin/bash
 
+DIR=outputs/figure3/
+[ ! -d $DIR ] && mkdir $DIR
+
 for PROTOCOL in "TcpWestwood" "TcpWestwoodPlus"; do
   DIR=outputs/figure3/$PROTOCOL
   [ ! -d $DIR ] && mkdir $DIR
